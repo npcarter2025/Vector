@@ -6,6 +6,7 @@ A VS Code extension created in the Vector directory.
 
 - Hello World command: Run `Vector: Hello World` from the command palette to see a greeting message.
 - Vector sidebar panel: A custom tree view that summarizes helpful actions and environment info.
+- Conversation panel: Chat with a local Ollama model directly from the Vector sidebar.
 
 ## Development
 
@@ -33,7 +34,15 @@ A VS Code extension created in the Vector directory.
    - Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and run the command `Vector: Hello World`.
    - Open the sidebar and select the **Vector** icon to explore the custom panel.
 
-5. Use the “Vector: Refresh Panel” command if you need to refresh the tree view contents.
+5. Run `ollama serve` locally so the extension can reach your models (default: `http://localhost:11434`).
+
+6. Use the panel actions:
+   - `Vector: Send Prompt` opens an input box—type instructions or questions and the conversation will be logged in the panel.
+   - `Vector: Clear Conversation` resets the chat history.
+   - Clicking any conversation entry opens its content beside your current editor.
+   - Use the “Vector: Refresh Panel” command if you need to refresh the tree view contents.
+
+7. Configure Ollama settings (optional) via `Preferences → Settings → Extensions → Vector Extension` to change the base URL or model name.
 
 ### Building
 

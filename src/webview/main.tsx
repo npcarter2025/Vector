@@ -11,6 +11,12 @@ function App() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState<{
+        connected: boolean;
+        error?: string;
+        baseUrl?: string;
+        model?: string;
+    } | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -34,6 +40,14 @@ function App() {
                 case 'error':
                     setIsLoading(false);
                     alert(message.message);
+                    break;
+                case 'connectionStatus':
+                    setConnectionStatus({
+                        connected: message.connected,
+                        error: message.error,
+                        baseUrl: message.baseUrl,
+                        model: message.model,
+                    });
                     break;
             }
         };
@@ -71,10 +85,30 @@ function App() {
         }
     };
 
+    const handleCheckConnection = () => {
+        vscode.postMessage({ command: 'checkConnection' });
+    };
+
     return (
         <div className="vector-chat-container">
             <div className="vector-chat-header">
-                <h2>Vector Chat</h2>
+                <div>
+                    <h2>Vector Chat</h2>
+                    {connectionStatus && (
+                        <div className="connection-status">
+                            <span
+                                className={`status-indicator ${connectionStatus.connected ? 'connected' : 'disconnected'}`}
+                            >
+                                {connectionStatus.connected ? '●' : '○'}
+                            </span>
+                            <span className="status-text">
+                                {connectionStatus.connected
+                                    ? `Connected to ${connectionStatus.model || 'Ollama'}`
+                                    : connectionStatus.error || 'Not connected'}
+                            </span>
+                        </div>
+                    )}
+                </div>
                 <button onClick={handleClear} className="clear-button">
                     Clear
                 </button>

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import fetch from 'node-fetch';
 import { getNonce } from './util/vscode';
+import { OllamaClient, OllamaChatMessage } from './ollamaClient';
 
 export class VectorWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'vectorPanelView';
@@ -48,6 +48,10 @@ export class VectorWebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'ready':
                         await this._sendHistoryToWebview();
+                        await this._checkOllamaConnection();
+                        break;
+                    case 'checkConnection':
+                        await this._checkOllamaConnection();
                         break;
                 }
             },
@@ -61,51 +65,33 @@ export class VectorWebviewProvider implements vscode.WebviewViewProvider {
 
         // Add user message to history
         const history = this._getHistory();
-        const userMessage = { role: 'user' as const, content: text, timestamp: Date.now() };
-        const newHistory = [...history, userMessage];
+        const userMessage: OllamaChatMessage = { role: 'user', content: text };
+        const newHistory = [...history, { ...userMessage, timestamp: Date.now() }];
         await this._saveHistory(newHistory);
 
         // Send user message to webview
         this._webview.postMessage({
             command: 'addMessage',
-            message: userMessage,
+            message: { ...userMessage, timestamp: Date.now() },
         });
 
-        // Get response from Ollama
+        // Get response from Ollama using OllamaClient
         const config = vscode.workspace.getConfiguration('vector');
         const baseUrl = config.get<string>('ollama.baseUrl', 'http://localhost:11434');
-        const model = config.get<string>('ollama.model', 'llama3');
+        const model = config.get<string>('ollama.model', 'gemma3:1b');
 
         try {
-            // Build prompt from conversation history
-            const conversationPrompt = newHistory
-                .slice(0, -1)
-                .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-                .join('\n\n');
-            const fullPrompt = conversationPrompt
-                ? `${conversationPrompt}\n\nUser: ${text}\n\nAssistant:`
-                : text;
+            const client = new OllamaClient(baseUrl, model);
+            
+            // Convert history to OllamaChatMessage format (without timestamp)
+            const ollamaMessages: OllamaChatMessage[] = newHistory
+                .slice(0, -1) // All messages except the current user message
+                .map(msg => ({ role: msg.role, content: msg.content }));
 
-            const response = await fetch(`${baseUrl}/api/generate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model,
-                    prompt: fullPrompt,
-                    stream: false,
-                }),
-            });
+            // Add the current user message
+            ollamaMessages.push(userMessage);
 
-            if (!response.ok) {
-                throw new Error(`Ollama responded with status ${response.status}`);
-            }
-
-            const data = (await response.json()) as { response: string };
-            const assistantContent = data.response?.trim();
-
-            if (!assistantContent) {
-                throw new Error('Received empty response from Ollama.');
-            }
+            const assistantContent = await client.sendMessage(ollamaMessages);
 
             const assistantMessage = {
                 role: 'assistant' as const,
@@ -126,6 +112,35 @@ export class VectorWebviewProvider implements vscode.WebviewViewProvider {
             this._webview.postMessage({
                 command: 'error',
                 message: `Failed to get response: ${errorMessage}`,
+            });
+        }
+    }
+
+    private async _checkOllamaConnection(): Promise<void> {
+        if (!this._webview) return;
+
+        const config = vscode.workspace.getConfiguration('vector');
+        const baseUrl = config.get<string>('ollama.baseUrl', 'http://localhost:11434');
+        const model = config.get<string>('ollama.model', 'gemma3:1b');
+
+        try {
+            const client = new OllamaClient(baseUrl, model);
+            const status = await client.checkConnection();
+            
+            this._webview.postMessage({
+                command: 'connectionStatus',
+                connected: status.connected,
+                error: status.error,
+                baseUrl,
+                model,
+            });
+        } catch (error) {
+            this._webview.postMessage({
+                command: 'connectionStatus',
+                connected: false,
+                error: error instanceof Error ? error.message : String(error),
+                baseUrl,
+                model,
             });
         }
     }

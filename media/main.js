@@ -24466,6 +24466,7 @@
     const [messages, setMessages] = (0, import_react.useState)([]);
     const [input, setInput] = (0, import_react.useState)("");
     const [isLoading, setIsLoading] = (0, import_react.useState)(false);
+    const [connectionStatus, setConnectionStatus] = (0, import_react.useState)(null);
     const messagesEndRef = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
       vscode.postMessage({ command: "ready" });
@@ -24485,6 +24486,14 @@
           case "error":
             setIsLoading(false);
             alert(message.message);
+            break;
+          case "connectionStatus":
+            setConnectionStatus({
+              connected: message.connected,
+              error: message.error,
+              baseUrl: message.baseUrl,
+              model: message.model
+            });
             break;
         }
       };
@@ -24515,9 +24524,24 @@
         handleSend();
       }
     };
+    const handleCheckConnection = () => {
+      vscode.postMessage({ command: "checkConnection" });
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "vector-chat-container", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "vector-chat-header", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Vector Chat" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Vector Chat" }),
+          connectionStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "connection-status", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "span",
+              {
+                className: `status-indicator ${connectionStatus.connected ? "connected" : "disconnected"}`,
+                children: connectionStatus.connected ? "\u25CF" : "\u25CB"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "status-text", children: connectionStatus.connected ? `Connected to ${connectionStatus.model || "Ollama"}` : connectionStatus.error || "Not connected" })
+          ] })
+        ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: handleClear, className: "clear-button", children: "Clear" })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "vector-chat-messages", children: [

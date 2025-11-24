@@ -69,7 +69,7 @@
         },
         "vector.ollama.model": {
           "type": "string",
-          "default": "llama3",
+          "default": "gemma3:1b",
           "description": "Default Ollama model used for chat responses."
         }
       }

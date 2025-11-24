@@ -30,10 +30,41 @@ body {
     background-color: var(--vscode-sideBar-background);
 }
 
+.vector-chat-header > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .vector-chat-header h2 {
     font-size: 14px;
     font-weight: 600;
     margin: 0;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.status-indicator {
+    font-size: 8px;
+    line-height: 1;
+}
+
+.status-indicator.connected {
+    color: #4ec9b0;
+}
+
+.status-indicator.disconnected {
+    color: #f48771;
+}
+
+.status-text {
+    opacity: 0.8;
 }
 
 .clear-button {

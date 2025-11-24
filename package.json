@@ -13,9 +13,10 @@
     "onCommand:vector.helloWorld",
     "onCommand:vector.refreshPanel",
     "onCommand:vector.sendMessage",
-    "onCommand:vector.clearConversation",
-    "onCommand:vector.showMessage",
-    "onView:vectorPanelView"
+      "onCommand:vector.clearConversation",
+      "onCommand:vector.showMessage",
+      "onCommand:vector.testIndexing",
+      "onView:vectorPanelView"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -39,6 +40,10 @@
       {
         "command": "vector.showMessage",
         "title": "Vector: Show Message"
+      },
+      {
+        "command": "vector.testIndexing",
+        "title": "Vector: Test Indexing Infrastructure"
       }
     ],
     "viewsContainers": {
@@ -93,7 +98,14 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "sqlite3": "^5.1.7",
+    "sqlite": "^5.1.1",
+    "p-limit": "^6.1.0",
+    "web-tree-sitter": "^0.21.0",
+    "tree-sitter-wasms": "^0.1.11",
+    "vectordb": "^0.4.20",
+    "uuid": "^9.0.1"
   }
 }
 
